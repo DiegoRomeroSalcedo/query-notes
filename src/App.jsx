@@ -11,8 +11,9 @@ const App = () => {
 
   const newMutation = useMutation({ // Para crear una nueva nota, se define con una mutacion usando la funcion useMutation
     mutationFn: createNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes']}) // Haciendo uso de onSucces se invalida la query con key notes, haciendo que esta se vuelva a ejecutar en resumidas cuentas, esto con el proposito de que los cambios sean visibles al instante.
+    onSuccess: (newNote) => {
+      const notes = queryClient.getQueryData(['notes'])
+      queryClient.setQueryData(['notes'], notes.concat(newNote))
     }
   })
 
@@ -25,8 +26,9 @@ const App = () => {
 
   const updateNoteMutation = useMutation({
     mutationFn: updateNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes']})
+    onSuccess: (updatedNote) => {
+      const notes = queryClient.getQueryData(['notes']) || []
+      queryClient.setQueryData(['notes'], notes.map(note => note.id === updatedNote.id ? updatedNote : note))
     }
   })
 
@@ -36,7 +38,8 @@ const App = () => {
 
   const result = useQuery({
     queryKey: ['notes'],
-    queryFn: getNotes
+    queryFn: getNotes,
+    refetchOnWindowFocus: false
   })
 
   console.log(JSON.parse(JSON.stringify(result)))
